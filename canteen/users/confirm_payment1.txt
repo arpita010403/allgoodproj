@@ -1,0 +1,156 @@
+<?php 
+include('../includes/connect.php');
+session_start();
+if(isset($_GET['order_id'])){
+    $order_id=$_GET['order_id'];
+    $select_data="SELECT * FROM `user_orders` WHERE order_id=$order_id";
+    $result=mysqli_query($con,$select_data);
+    $row_fetch=mysqli_fetch_assoc($result);
+    $invoice_number=$row_fetch['invoice_number'];
+    $amount_due=$row_fetch['amount_due'];
+}
+
+if(isset($_POST['confirm_payment'])){
+    $invoice_number = $_POST['invoice_number'];
+    $amount=$_POST['amount'];
+    $payment_mode=$_POST['payment_mode'];
+    $insert_query="Insert into `user_payments` (order_id,invoice_number,amount,payment_mode) values ($order_id,$invoice_number,$amount,'$payment_mode')";
+    $result=mysqli_query($con,$insert_query);
+    if($result){
+        echo "<h3 class='text-center text-light'>Successfully completed the payment</h3>";
+        echo "<script>window.open('profile.php?my_orders','_self')</script>";
+    }
+    $update_orders="update `user_orders` set order_status='Complete' where order_id=$order_id";
+    $result_orders=mysqli_query($con,$update_orders);
+
+
+    // if(isset($_POST['confirm_payment'])){
+    //     $invoice_number = $_POST['invoice_number'];
+    //     $amount=$_POST['amount'];
+    //     $payment_mode=$_POST['payment_mode'];
+    //     $insert_query="Insert into `user_payments` (order_id,invoice_number,amount,payment_mode) values ($order_id,$invoice_number,$amount,'$payment_mode')";
+    //     $result=mysqli_query($con,$insert_query);
+    //     if($result){
+    //         echo "<h3 class='text-center text-light'>Successfully completed the payment</h3>";
+    //         // Update order status to 'Complete' in the database
+    //         $update_orders="UPDATE `user_orders` SET order_status='Complete' WHERE order_id=$order_id";
+    //         $result_orders=mysqli_query($con,$update_orders);
+    //         if($result_orders) {
+    //             // Redirect to my_orders page after payment confirmation
+    //             echo "<script>window.open('profile.php?my_orders','_self')</script>";
+    //         } else {
+    //             echo "<p>Error updating order status</p>";
+    //         }
+    //     }
+    // }}
+    if(isset($_POST['confirm_payment'])){
+        $invoice_number = $_POST['invoice_number'];
+        $amount=$_POST['amount'];
+        $payment_mode=$_POST['payment_mode'];
+        $insert_query="Insert into `user_payments` (order_id,invoice_number,amount,payment_mode) values ($order_id,$invoice_number,$amount,'$payment_mode')";
+        $result=mysqli_query($con,$insert_query);
+        if($result){
+            echo "<h3 class='text-center text-light'>Successfully completed the payment</h3>";
+            
+            // Update order status to 'Complete' in the database
+            $update_orders="UPDATE `user_orders` SET order_status='Complete' WHERE order_id=$order_id";
+            $result_orders=mysqli_query($con,$update_orders);
+            
+            if($result_orders) {
+                // Redirect to my_orders page after payment confirmation
+                echo "<script>window.open('profile.php?my_orders','_self')</script>";
+            } else {
+                // Display error message if update query fails
+                echo "<p>Error updating order status: " . mysqli_error($con) . "</p>";
+            }
+        } else {
+            // Display error message if insert query fails
+            echo "<p>Error inserting payment details: " . mysqli_error($con) . "</p>";
+        }
+    }
+}  
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment page</title>
+    <!-- Bootstrap CSS link -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+
+    <!-- Font Awesome link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body{
+            background-color: #43766C;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="text-center text-light">Confirm Payment</h1>
+        <form action="" method="post" class="text-center">
+            <div class="form-outline my-4 w-50 m-auto">
+                <input type="text" class="form-control" name="invoice_number" value="<?php echo isset($invoice_number) ? $invoice_number : ''; ?>" placeholder="Invoice Number" readonly>
+            </div>
+            <div class="form-outline my-4 w-50 m-auto">
+                <input type="text" class="form-control" name="amount" value="<?php echo isset($amount_due) ? $amount_due : ''; ?>" placeholder="Amount" readonly>
+            </div>
+            <div class="form-outline my-4 w-50 m-auto">
+                <input type="text" class="form-control" name="name" id="name" placeholder="Enter your name">
+            </div>
+            <div class="form-outline my-4 w-50 m-auto">
+                <input type="text" class="form-control" name="amt" id="amt" placeholder="Enter amount">
+            </div>
+            <div class="form-outline my-4 w-50 m-auto">
+                <input type="button" class="btn btn-light py-2 px-3 border-0" value="Pay Now" onclick="pay_now()">
+            </div>
+        </form>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    
+    <!-- Razorpay Checkout Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <script>
+        function pay_now(){
+            var name = jQuery('#name').val();
+            var amt = jQuery('#amt').val();
+
+            jQuery.ajax({
+                type: 'post',
+                url: 'payment_process.php',
+                data: "amo=" + amt + "&name=" + name,
+                success: function(result){
+                    var options = {
+                        "key": "rzp_test_UUIeaq5LwnqdTE", 
+                        "amount": amt * 100, 
+                        "currency": "INR",
+                        "name": "Canteen",
+                        "description": "Test Transaction",
+                        "image": "https://image.freepik.com/free-vector/logo-sample-text_355-558.jpg",
+                        "handler": function (response){
+                            jQuery.ajax({
+                                type: 'post',
+                                url: 'payment_process.php',
+                                data: "payment_id=" + response.razorpay_payment_id,
+                                success: function(result){
+                                    window.location.href = "profile.php?my_orders";
+                                }
+                            });
+                        }
+                    };
+                    var rzp1 = new Razorpay(options);
+                    rzp1.open();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

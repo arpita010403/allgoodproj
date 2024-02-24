@@ -1,0 +1,109 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+include('../includes/connect.php');
+
+$username = $_SESSION['username'];
+$get_user = "SELECT * FROM `user_table` WHERE username='$username'";
+$result = mysqli_query($con, $get_user);
+$row_fetch = mysqli_fetch_array($result);
+$user_id = $row_fetch['user_id'];
+
+// Check if $order_id is set and not empty
+if(isset($_GET['order_id']) && !empty($_GET['order_id'])){
+    $order_id = $_GET['order_id'];
+    
+    // Proceed with your SQL query
+    $get_payment_info = "SELECT payment_mode FROM `user_payments` WHERE order_id=$order_id";
+    $result_payment_info = mysqli_query($con, $get_payment_info);
+    $payment_info = mysqli_fetch_array($result_payment_info);
+    
+    // Check if payment information exists
+    if($payment_info !== null) {
+        $payment = $payment_info['payment_mode'];
+    } else {
+        // Set default payment mode or handle the case where payment information is not available
+        $payment = 'Not available';
+    }
+} else {
+    // Handle the case where $order_id is not set or empty
+    echo "Order ID is not provided or empty.";
+    // You might want to add additional handling here, like redirecting the user or displaying an error message
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My orders</title>
+    <style>
+        th {
+            background: #5F8670;
+            color: white;
+        }
+        tbody {
+            background-color: bisque;
+        }
+    </style>
+</head>
+
+<body>
+    <h3 class="text-success">My orders</h3>
+    <table class="table table-bordered mt-5 p-0">
+        <thead class="border border-dark rounded">
+            <tr>
+                <th>Sr.No.</th>
+                <th>Amount Due</th>
+                <th>Total Items</th>
+                <th>Invoice Number</th>
+                <th>Date</th>
+                <th>Complete/Incomplete</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php 
+            $get_order_details = "SELECT * FROM `user_orders` WHERE user_id=$user_id";
+            $result_orders = mysqli_query($con, $get_order_details);
+            $number = 1;
+            while ($row_orders = mysqli_fetch_array($result_orders)) {
+                $order_id = $row_orders['order_id'];
+                $amount_due = $row_orders['amount_due'];
+                $total_products = $row_orders['total_products'];
+                $invoice_number = $row_orders['invoice_number'];
+                $order_date = $row_orders['order_date'];
+                $order_status = $row_orders['order_status'];
+                if ($order_status == 'pending') {
+                    $order_status = 'Incomplete';
+                } else {
+                    $order_status = "Complete";
+                }
+                
+                echo "<tr>
+                        <td>$number</td>
+                        <td>₹$amount_due/-</td>
+                        <td>$total_products</td>
+                        <td>$invoice_number</td>
+                        <td>$order_date</td>
+                        <td>$order_status</td>";
+                        
+                if ($order_status == 'Complete') {
+                    echo "<td>Paid</td>";
+                } else {
+                    echo "<td><a href='confirm_payment.php?order_id=$order_id'>Confirm</a></td>";
+                }
+                echo "</tr>";
+                $number++;
+            }
+            ?>
+        </tbody>
+    </table>
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+<?php
+session_start();
+include('./includes/connect.php'); // Include your database connection file here
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Form with ratingss</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .ratings {
+  display: inline-block;
+}
+
+.ratings input {
+  display: none;
+}
+
+.ratings label {
+  cursor: pointer;
+  width: 25px;
+  height: 25px;
+  margin: 0;
+  padding: 0;
+  font-size: 25px;
+  line-height: 25px;
+}
+
+.ratings label:before {
+  content: '\2605';
+  display: block;
+}
+
+.ratings input:checked ~ label:before {
+  content: '\2605';
+  color: orange;
+}
+
+
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 class="mb-4">Feedback Form with ratingss</h2>
+
+
+    <form action="submit_feedback.php" method="post">
+    <label for="name">Name:</label><br>
+    <input type="text" id="name" name="name" required><br><br>
+    
+    <label for="email">Email:</label><br>
+    <input type="email" id="email" name="email" required><br><br>
+    
+    <label for="feedback">Feedback:</label><br>
+    <textarea id="feedback" name="feedback" rows="4" required></textarea><br><br>
+    <div class="ratings">
+    <input type="radio" id="star5" name="ratings" value="5">
+    <label for="star5" title="5 stars"></label>
+    <input type="radio" id="star4" name="ratings" value="4">
+    <label for="star4" title="4 stars"></label>
+    <input type="radio" id="star3" name="ratings" value="3">
+    <label for="star3" title="3 stars"></label>
+    <input type="radio" id="star2" name="ratings" value="2">
+    <label for="star2" title="2 stars"></label>
+    <input type="radio" id="star1" name="ratings" value="1">
+    <label for="star1" title="1 star"></label>
+  </div>
+   <br><br>
+    
+    <input type="submit" value="Submit Feedback">
+</form>
+
+  
+  
+
+    </div>
+
+</body>
+</html>
